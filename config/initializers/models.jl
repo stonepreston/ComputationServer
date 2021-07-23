@@ -1,40 +1,30 @@
 using ModelingToolkit: get_connection_type
-using Base: String
+using Base: String, UInt32
 using HydraulicModels
 using ModelingToolkit
-
+using JSON
 @parameters t
 
-const static_pipe_key = "Static Pipe"
-const ideal_pressure_source_key  = "Ideal Pressure Source"
-
-# struct Model 
-#     id::UInt32
-#     name::String
-#     constructor::Function
-# end
-
-
-const models = Dict{String, Function}(
-    static_pipe_key => StaticPipe,
-    ideal_pressure_source_key => IdealPressureSource
-)
-
-function get_model_keys()
-    return sort(collect(keys(models)), by=x->x[1])
+struct Model 
+    id::UInt32
+    name::String
+    system::ModelingToolkit.AbstractSystem
 end
 
-struct ModelCategory 
-    category_key::String
-    model_keys::Vector{String}
+static_pipe = Model(1, "Static Pipe", StaticPipe(t; name=:static_pipe))
+ideal_pressure_source = Model(2, "Ideal Pressure Source", IdealPressureSource(t; name=:ideal_pressure_source))
+
+struct ModelCategory
+    category::String
+    models::Vector{Model}
 end
 
-const model_categories = ModelCategory[
-    ModelCategory("Pipes", [static_pipe_key]),
-    ModelCategory("Sources", [ideal_pressure_source_key])
+const categorized_models = ModelCategory[
+    ModelCategory("Sources", [ideal_pressure_source]),
+    ModelCategory("Pipes", [static_pipe]),
 ]
 
-function get_connections(system::ModelingToolkit.AbstractSystem)
+function get_connections(system::ModelingToolkit.AbstractSystem)::Vector{String}
     connections::Vector{String} = []
     for subsystem in ModelingToolkit.get_systems(system)
         if isequal(subsystem.connection_type, Pin)
@@ -44,7 +34,29 @@ function get_connections(system::ModelingToolkit.AbstractSystem)
     return connections
 end
 
-function get_connections_for_model_key(key::String)
-    model_constructor::Function = models[key]
-    get_connections(model_constructor(t; name=Symbol(key)))
+function get_model_by_id(id::UInt32)
+    for category in categorized_models
+        for model in category.models
+            if model.id == id
+                return model
+            end
+        end
+    end
+
+    return nothing
 end
+
+struct System 
+    parameters::Vector{String}
+    states::Vector{String}
+    equations::Vector{String}
+    connections::Vector{String}
+end
+
+JSON.lower(system::ModelingToolkit.AbstractSystem) = System(
+    string.(parameters(system)),
+    string.(states(system)),
+    string.(equations(system)),
+    get_connections(system)
+)
+
