@@ -34,6 +34,7 @@ function get_connections(system::ModelingToolkit.AbstractSystem)::Vector{String}
     return connections
 end
 
+
 function get_model_by_id(id::UInt32)
     for category in categorized_models
         for model in category.models
@@ -46,17 +47,31 @@ function get_model_by_id(id::UInt32)
     return nothing
 end
 
+struct Parameter
+    name::String
+    value::Number
+end
+
 struct System 
-    parameters::Vector{String}
+    parameters::Vector{Parameter}
     states::Vector{String}
     equations::Vector{String}
     connections::Vector{String}
 end
 
+function build_parameters(system)::Vector{Parameter}
+    parameterData = []
+    for p in parameters(system)
+        push!(parameterData, Parameter(string(p), ModelingToolkit.get_defaults(system)[p]))
+    end
+    return parameterData
+end
+
 JSON.lower(system::ModelingToolkit.AbstractSystem) = System(
-    string.(parameters(system)),
+    build_parameters(system),
     string.(states(system)),
     string.(equations(system)),
     get_connections(system)
 )
 
+build_parameters(static_pipe.system)
