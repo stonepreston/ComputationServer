@@ -3,6 +3,7 @@ module ComputationServer
 using Genie 
 using Logging
 using LoggingExtras 
+using Revise
 
 function main()
 

@@ -3,22 +3,34 @@ using Base: String, UInt32
 using HydraulicModels
 using ModelingToolkit
 using JSON
-
-@parameters t
-
+# using ModelTypes
 struct Model 
     id::UInt32
     name::String
     system::ModelingToolkit.AbstractSystem
 end
 
-static_pipe = Model(1, "Static Pipe", StaticPipe(t; name=:static_pipe))
-ideal_pressure_source = Model(2, "Ideal Pressure Source", IdealPressureSource(t; name=:ideal_pressure_source))
-
 struct ModelCategory
     category::String
     models::Vector{Model}
 end
+
+struct Parameter
+    name::String
+    value::Number
+end
+
+struct System 
+    parameters::Vector{Parameter}
+    states::Vector{String}
+    equations::Vector{String}
+    connections::Vector{String}
+end
+
+@parameters t
+
+static_pipe = Model(1, "Static Pipe", StaticPipe(t; name=:static_pipe))
+ideal_pressure_source = Model(2, "Ideal Pressure Source", IdealPressureSource(t; name=:ideal_pressure_source))
 
 const categorized_models = ModelCategory[
     ModelCategory("Sources", [ideal_pressure_source]),
@@ -35,7 +47,6 @@ function get_connections(system::ModelingToolkit.AbstractSystem)::Vector{String}
     return connections
 end
 
-
 function get_model_by_id(id::UInt32)
     for category in categorized_models
         for model in category.models
@@ -46,18 +57,6 @@ function get_model_by_id(id::UInt32)
     end
 
     return nothing
-end
-
-struct Parameter
-    name::String
-    value::Number
-end
-
-struct System 
-    parameters::Vector{Parameter}
-    states::Vector{String}
-    equations::Vector{String}
-    connections::Vector{String}
 end
 
 function build_parameters(system)::Vector{Parameter}
