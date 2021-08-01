@@ -1,5 +1,3 @@
-module ModelTypes
-
 using Base: String, UInt32
 using ModelingToolkit
 
@@ -26,4 +24,3 @@ struct System
     connections::Vector{String}
 end
 
-end
