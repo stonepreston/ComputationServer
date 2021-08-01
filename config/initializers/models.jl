@@ -2,32 +2,9 @@ using ModelingToolkit: get_connection_type
 using Base: String, UInt32
 using HydraulicModels
 using ModelingToolkit
-using JSON
+using StructTypes
 
 include("../../lib/model_types.jl")
-# using ModelTypes
-# struct Model 
-#     id::UInt32
-#     name::String
-#     system::ModelingToolkit.AbstractSystem
-# end
-
-# struct ModelCategory
-#     category::String
-#     models::Vector{Model}
-# end
-
-# struct Parameter
-#     name::String
-#     value::Number
-# end
-
-# struct System 
-#     parameters::Vector{Parameter}
-#     states::Vector{String}
-#     equations::Vector{String}
-#     connections::Vector{String}
-# end
 
 @parameters t
 
@@ -61,7 +38,7 @@ function get_model_by_id(id::UInt32)
     return nothing
 end
 
-function build_parameters(system)::Vector{Parameter}
+function build_parameters(system::ModelingToolkit.AbstractSystem)::Vector{Parameter}
     parameterData = []
     for p in parameters(system)
         push!(parameterData, Parameter(string(p), ModelingToolkit.get_defaults(system)[p]))
@@ -69,7 +46,10 @@ function build_parameters(system)::Vector{Parameter}
     return parameterData
 end
 
-JSON.lower(system::ModelingToolkit.AbstractSystem) = System(
+StructTypes.StructType(::Type{ModelingToolkit.AbstractSystem}) = StructTypes.CustomStruct()
+StructTypes.StructType(::Type{ModelingToolkit.ODESystem}) = StructTypes.CustomStruct()
+
+StructTypes.lower(system::ModelingToolkit.AbstractSystem) = System(
     build_parameters(system),
     string.(states(system)),
     string.(equations(system)),

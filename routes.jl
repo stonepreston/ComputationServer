@@ -1,13 +1,13 @@
 using Genie.Router
 using Genie.Requests
-using JSON
+using JSON3
 
 route("/") do
   serve_static_file("welcome.html")
 end
 
 route("/categorized_models") do
-  JSON.json(ComputationServer.categorized_models)
+  JSON3.write(ComputationServer.categorized_models)
 end
 
 function force_compile()
