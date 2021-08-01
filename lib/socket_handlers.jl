@@ -1,17 +1,19 @@
 using HTTP: WebSockets
-using JSON
+using JSON3
 using HTTP
 using Match
+include("./model_builder.jl")
+
 clients = Dict{String, HTTP.WebSockets.WebSocket}()
 
 function handleMessage(ws::HTTP.WebSockets.WebSocket, message::String) 
 
-    message = JSON.parse(message);
+    message = JSON3.read(message)
     id = message["id"]
     event = message["event"]
     data = message["data"]
     println("Raw message: ")
-    println(message);
+    println(message)
     println("Client: $id sent event $event with data $data")
     println("**********************************************************************")
 
@@ -36,14 +38,10 @@ end
 
 function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data) 
     println("build_model event received from client $id")
-    edgeNodes = data["edgeNodes"];
-    modelNodes = data["modelNodes"]
-
-    for modelNode in modelNodes
-        nodeData = modelNode["data"]
-        model = nodeData["model"]
-        println(model)
-    end
+    edge_modes = data.edgeNodes
+    model_nodes = data.modelNodes
+    systems = get_systems(model_nodes)
+    println(systems)
 end
 
 
