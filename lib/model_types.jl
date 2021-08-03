@@ -38,10 +38,8 @@ struct SerializedModel
 end
 StructTypes.StructType(::Type{SerializedModel}) = StructTypes.Struct()
 
-StructTypes.StructType(::Type{ModelingToolkit.AbstractSystem}) = StructTypes.CustomStruct()
-StructTypes.StructType(::Type{ModelingToolkit.ODESystem}) = StructTypes.CustomStruct()
+StructTypes.StructType(::Type{T}) where {T <: ModelingToolkit.AbstractSystem} = StructTypes.CustomStruct()
 StructTypes.StructType(::Type{Model}) = StructTypes.CustomStruct()
-
 
 StructTypes.lower(model::Model) = SerializedModel(
     model.id,

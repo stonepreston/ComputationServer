@@ -40,8 +40,23 @@ function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data)
     println("build_model event received from client $id")
     edge_modes = data.edgeNodes
     model_nodes = data.modelNodes
-    systems = get_systems(model_nodes)
-    println(systems)
+    println("Model nodes: ")
+    println(model_nodes)
+    println("Edge nodes: ")
+    println(edge_modes)
+    systems_map = get_systems_map(model_nodes)
+    connections = get_connection_equations(systems_map, model_nodes, edge_modes)
+    println("Connections")
+    len = length(connections)
+    println("Length: $len")
+    for connection in connections
+        println(connection)
+    end
+    @parameters t
+    top_level_system = build_top_level_system(t, connections, systems_map)
+    # sol = solve_system(top_level_system)
+    solve_system(top_level_system)
+    # println(sol)
 end
 
 
