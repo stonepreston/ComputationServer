@@ -4,7 +4,7 @@ using HydraulicModels
 using ModelingToolkit
 using StructTypes
 
-include("../../lib/model_types.jl")
+include("./model_types.jl")
 
 @parameters t
 
@@ -50,4 +50,3 @@ function build_parameters(system::ModelingToolkit.AbstractSystem)::Vector{Parame
     return parameterData
 end
 
-build_parameters(static_pipe.system)
