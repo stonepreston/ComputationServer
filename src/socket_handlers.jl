@@ -54,9 +54,12 @@ function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data)
     end
     @parameters t
     top_level_system = build_top_level_system(t, connections, systems_map)
-    # sol = solve_system(top_level_system)
-    solve_system(top_level_system)
-    # println(sol)
+    simplified_system = structural_simplify(top_level_system)
+    ps = build_parameter_map(simplified_system, model_nodes)
+    println("Parameter map")
+    println(ps)
+    sol = solve_system(simplified_system, ps)
+    println(sol)
 end
 
 

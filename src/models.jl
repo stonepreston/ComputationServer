@@ -11,7 +11,7 @@ include("./model_types.jl")
 static_pipe = Model(1, "Static Pipe", StaticPipe(t; name=:static_pipe), StaticPipe)
 ideal_pressure_source = Model(2, "Ideal Pressure Source", IdealPressureSource(t; name=:ideal_pressure_source), IdealPressureSource)
 
-const categorized_models = ModelCategory[
+categorized_models = ModelCategory[
     ModelCategory("Sources", [ideal_pressure_source]),
     ModelCategory("Pipes", [static_pipe]),
 ]

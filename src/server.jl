@@ -30,6 +30,7 @@ end
 
 
 function get_categorized_models(req::HTTP.Request)
+    println("Handling request for /categorized_models")
     return HTTP.Response(200, headers; body=JSON3.write(categorized_models))
 end
 

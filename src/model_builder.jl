@@ -1,5 +1,6 @@
 using ModelingToolkit
 using DifferentialEquations
+include("./models.jl")
 
 function get_node_by_id(model_nodes, node_ID::String)
     for model_node in model_nodes
@@ -23,7 +24,7 @@ function get_systems_map(model_nodes)::Dict{String, ModelingToolkit.AbstractSyst
         node_data = model_node.data
         model = node_data.model
 
-        model_prototype = ComputationServer.get_model_by_id(model.id)
+        model_prototype = get_model_by_id(model.id)
         formatted_name = get_formatted_name(node_data.label)
         systems_map[model_node.id] = model_prototype.constructor(t, name=Symbol(formatted_name))
     end
@@ -39,7 +40,7 @@ function find_edges_for_model_node_target(model_node)
 end
 
 function is_1_pin_system(system::ModelingToolkit.AbstractSystem)::Bool
-    connectors = ComputationServer.get_connections(system)
+    connectors = get_connections(system)
     return (length(connectors) == 1)
 end
 
@@ -85,7 +86,7 @@ function get_source_junction_equations(systems_map::Dict{String, ModelingToolkit
                 push!(pins, target_system.a)
             end
 
-            eqs = connect(pins...)
+            eqs = ModelingToolkit.connect(pins...)
             for eqn in eqs
                 push!(connection_eqs, eqn)
             end
@@ -134,7 +135,7 @@ function get_target_junction_equations(systems_map::Dict{String, ModelingToolkit
             # Now add the target pin on to the end of the pins array
             push!(pins, target_pin)
 
-            eqs = connect(pins...)
+            eqs = ModelingToolkit.connect(pins...)
             for eqn in eqs
                 push!(connection_eqs, eqn)
             end
@@ -153,7 +154,7 @@ function get_non_junction_equations(systems_map::Dict{String, ModelingToolkit.Ab
         source_system = systems_map[source_id]
         target_system = systems_map[target_id]
 
-        source_connectors = ComputationServer.get_connections(source_system)
+        source_connectors = get_connections(source_system)
         source_pin = nothing
         target_pin = target_system.a
         # Need to check if we have a 1 pin source or not
@@ -165,7 +166,7 @@ function get_non_junction_equations(systems_map::Dict{String, ModelingToolkit.Ab
             source_pin = source_system.b
         end
 
-        eqs = connect(source_pin, target_pin)
+        eqs = ModelingToolkit.connect(source_pin, target_pin)
         for eqn in eqs
             push!(connection_eqs, eqn)
         end
@@ -216,16 +217,32 @@ function build_top_level_system(iv::Num, connections::Vector{Equation}, systems_
     return top_level_system
 end
 
-function solve_system(system::ODESystem) 
-    simplified = structural_simplify(system)
-    @show(simplified)
-    println("simplified equations")
-    println(equations(simplified))
-    println("simplified parameters")
-    println(parameters(simplified))
-    # tspan = (0.0, 0.0)
-    # prob = ODEProblem(simplified, [], tspan)
-    # sol = solve(prob, Rodas4())
-    # return sol
+function build_parameter_map(simplified_system, model_nodes) 
+    ps = Dict()
+    for model_node in model_nodes
+        node_data = model_node.data
+        model = node_data.model
+        for parameter in model.system.parameters
+            p_name_sym = Symbol(parameter.name)
+            p_value = Float64(parameter.value)
+            formatted_name = get_formatted_name(node_data.label)
+            sys_name_sym = Symbol(formatted_name)
+            sys_p_name_sym = Symbol(sys_name_sym, :₊, p_name_sym)
+            namespace_map = ModelingToolkit.get_var_to_name(simplified_system)
+            sys_p_name = namespace_map[sys_p_name_sym]
+            ps[sys_p_name] = p_value
+        end
+
+    end
+
+    return ps
+
+end
+
+function solve_system(simplified_system, parameterMap) 
+    tspan = (0.0, 0.0)
+    prob = ODEProblem(simplified_system, [], tspan, parameterMap)
+    sol = solve(prob, Rodas4())
+    return sol
 end
 
