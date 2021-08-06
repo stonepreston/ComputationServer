@@ -59,7 +59,10 @@ function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data)
     println("Parameter map")
     println(ps)
     sol = solve_system(simplified_system, ps)
-    println(sol)
+    solution_map = build_solution_map(top_level_system, sol)
+    println("Solution map: ")
+    println(solution_map)
+    write(ws, solution_map)
 end
 
 

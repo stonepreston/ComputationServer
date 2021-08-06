@@ -246,3 +246,11 @@ function solve_system(simplified_system, parameterMap)
     return sol
 end
 
+function build_solution_map(top_level_system, sol) 
+    solution_map = Dict()
+    for state in ModelingToolkit.states(top_level_system)
+        solution_map[state] = sol[state]
+    end
+    return JSON3.write(solution_map)
+end
+
