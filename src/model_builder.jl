@@ -246,11 +246,18 @@ function solve_system(simplified_system, parameterMap)
     return sol
 end
 
-function build_solution_map(top_level_system, sol) 
-    solution_map = Dict()
+struct ResultItem
+    name::String
+    value::Float64
+end
+StructTypes.StructType(::Type{ResultItem}) = StructTypes.Struct()
+
+function build_solutions_list(top_level_system, sol) 
+    solutions_list = ResultItem[]
     for state in ModelingToolkit.states(top_level_system)
-        solution_map[state] = sol[state]
+        solution_item = ResultItem(string(state), sol[state][1])
+        push!(solutions_list, solution_item)
     end
-    return JSON3.write(solution_map)
+    return JSON3.write(solutions_list)
 end
 
