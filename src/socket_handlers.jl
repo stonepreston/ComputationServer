@@ -58,11 +58,13 @@ function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data)
     ps = build_parameter_map(simplified_system, model_nodes)
     println("Parameter map")
     println(ps)
+    write(ws, "simulating")
     sol = solve_system(simplified_system, ps)
     solutions_list = build_solutions_list(top_level_system, sol)
     println("Solutions list: ")
     println(solutions_list)
     write(ws, solutions_list)
+    write(ws, "done")
 end
 
 
