@@ -1,5 +1,6 @@
 using ModelingToolkit
 using DifferentialEquations
+using Match
 include("./models.jl")
 
 function get_node_by_id(model_nodes, node_ID::String)
@@ -363,4 +364,50 @@ function get_optimized_parameters(result_ode_u, top_level_system, selected_param
         end
     end
     return p_dict
+end
+
+function get_lower_bound(parameter::String)
+    split_name = split(parameter, "₊")
+    param_name = split_name[2]
+    @match param_name begin
+        "L" => return .001
+        "d" => return .001
+        "C" => return 40
+        "γ" => return .001
+        "p" => return .001
+    end
+    return .001
+end
+
+function get_lower_bounds(top_level_system)
+    lower_bounds = []
+
+    top_level_ps = ModelingToolkit.parameters(top_level_system)
+    for parameter in top_level_ps
+        push!(lower_bounds, get_lower_bound(string(parameter)))
+    end
+    return lower_bounds
+end
+
+function get_upper_bound(parameter::String)
+    split_name = split(parameter, "₊")
+    param_name = split_name[2]
+    @match param_name begin
+        "L" => return 5
+        "d" => return 5
+        "C" => return 160
+        "γ" => return 9820
+        "p" => return 1001325
+    end
+    return 1001325
+end
+
+function get_upper_bounds(top_level_system)
+    upper_bounds = []
+
+    top_level_ps = ModelingToolkit.parameters(top_level_system)
+    for parameter in top_level_ps
+        push!(upper_bounds, get_upper_bound(string(parameter)))
+    end
+    return upper_bounds
 end
