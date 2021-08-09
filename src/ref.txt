@@ -1,0 +1,18 @@
+pressure source 1 = 501325
+pipe 1 and 2 in series
+pipe1 C = 90
+pie2 C = 90
+static_pipe_1.Δp	200000.0000000001
+static_pipe_1.Q	11.470217164799628
+static_pipe_2.Δp	199999.99999999988
+static_pipe_2.Q	11.470217164799628
+
+pressure source 1 = 501325
+pipe 1 and 2 in series
+pipe1 C = 60
+pie2 C = 80
+static_pipe_1.Δp	252053.17869992816
+static_pipe_1.Q	8.664143180323185
+static_pipe_2.Δp	147946.82130007184
+static_pipe_2.Q	8.664143180323185
+

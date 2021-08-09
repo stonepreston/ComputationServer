@@ -2,6 +2,7 @@ using HTTP: WebSockets
 using JSON3
 using HTTP
 using Match
+using DiffEqFlux
 include("./model_builder.jl")
 
 clients = Dict{String, HTTP.WebSockets.WebSocket}()
@@ -12,15 +13,14 @@ function handleMessage(ws::HTTP.WebSockets.WebSocket, message::String)
     id = message["id"]
     event = message["event"]
     data = message["data"]
-    println("Raw message: ")
-    println(message)
-    println("Client: $id sent event $event with data $data")
+    println("Client: $id sent event $event")
     println("**********************************************************************")
 
     @match event begin
         "connect" => on_connect(ws, id)
         "disconnect" => on_disconnect(ws, id)
         "build_model" => on_build_model(ws, id, data)
+        "estimate_parameters" => on_estimate_parameters(ws, id, data)
     end
 
 end
@@ -66,5 +66,62 @@ function on_build_model(ws::HTTP.WebSockets.WebSocket, id, data)
     write(ws, solutions_list)
     write(ws, "done")
 end
+
+function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data) 
+    println("estimate_parameters event received from client $id")
+    println("States: ")
+    println(data.states)
+    println("Selected parameters: ")
+    println(data.selectedParameters)
+
+    edge_modes = data.edgeNodes
+    model_nodes = data.modelNodes
+    systems_map = get_systems_map(model_nodes)
+    connections = get_connection_equations(systems_map, model_nodes, edge_modes)
+    @parameters t
+    top_level_system = build_top_level_system(t, connections, systems_map)
+    simplified_system = structural_simplify(top_level_system)
+    pmap = build_parameter_map(simplified_system, model_nodes)
+
+    write(ws, "optimizing")
+
+    prob = get_problem(simplified_system, pmap)
+
+    initial_ps::Vector{Float64} = build_initial_parameter_list(top_level_system, pmap)
+
+    println("True sols: ")
+    true_sols = build_true_sol_list(data.states)
+    println(true_sols)
+
+    callback = function (p, l, pred)
+        display(l)
+        display(p)
+        # Tell sciml_train to not halt the optimization. If return true, then
+        # optimization stops.
+        return false
+    end
+
+    lossfn = function (p)
+        println("Current ps")
+        println(p)
+        ps::Vector{Float64} = replace_parameters(top_level_system, p, initial_ps, data.selectedParameters)
+        sol = solve(prob, Rodas4(), p=ps)
+        current_sols = build_current_sol_list(sol, simplified_system, data.states)
+        loss_value::Float64 = sum(abs2, current_sols .- true_sols)
+        return loss_value, sol
+    end
+
+    println("initial_ps: ")
+    println(initial_ps)
+    lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    upper_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; cb = callback, f_abstol=1e-7, f_reltol=1e-7)
+    println("result ode.u: ")
+    println(result_ode.u)
+        
+
+    write(ws, "done")
+end
+
 
 

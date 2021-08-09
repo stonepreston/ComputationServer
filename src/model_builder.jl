@@ -246,6 +246,12 @@ function solve_system(simplified_system, parameterMap)
     return sol
 end
 
+function get_problem(simplified_system, parameterMap)
+    tspan = (0.0, 0.0)
+    prob = ODEProblem(simplified_system, [], tspan)
+    return prob
+end
+
 struct ResultItem
     name::String
     value::Float64
@@ -261,3 +267,87 @@ function build_solutions_list(top_level_system, sol)
     return JSON3.write(solutions_list)
 end
 
+function format_selected_parameter_name(parameter_name)
+
+    split_name = split(parameter_name, ".")
+    no_spaces_lower_case_system_name = get_formatted_name(split_name[1])
+    formatted_parameter_name = string(no_spaces_lower_case_system_name, "₊", split_name[2])
+    return formatted_parameter_name
+end
+
+function get_selected_parameter_indices(top_level_system, selected_parameters)
+
+    top_level_ps = ModelingToolkit.parameters(top_level_system)
+    indices = []
+    for selected_parameter in selected_parameters
+        for (index, value) in enumerate(top_level_ps)
+            if string(value) == format_selected_parameter_name(selected_parameter)
+                push!(indices, index)
+            end
+        end
+    end
+   return indices
+    
+end
+
+function build_initial_parameter_list(top_level_system, pmap)::Vector{Float64}
+    plist::Vector{Float64} = []
+    top_level_ps = ModelingToolkit.parameters(top_level_system)
+
+    for parameterName in top_level_ps
+        push!(plist, pmap[parameterName])
+    end
+
+    return plist
+end
+
+function build_true_sol_list(states)
+    true_sols = []
+    for (key, value) in states
+        if value != ""
+            push!(true_sols, parse(Float64, value))
+        end
+    end
+    return true_sols
+end
+
+function format_selected_state_names(selected_states)
+    formatted_names = []
+    for (key, value) in selected_states
+        if (value != "")
+            removed_parens = replace(string(key), "(t)" => "")
+            split_name = split(removed_parens, ".")
+            system_name = split_name[1]
+            formatted_system_name = get_formatted_name(system_name)
+            push!(formatted_names, string(formatted_system_name, "₊", split_name[2]))
+        end
+    end
+   
+    return formatted_names
+
+end
+function build_current_sol_list(sol, simplified_system, states)
+    current_sols = []
+    formatted_state_names = format_selected_state_names(states)
+    namespace_map = ModelingToolkit.get_var_to_name(simplified_system)
+    for state_name in formatted_state_names
+        name_sym = Symbol(state_name)
+        mapped_name = namespace_map[name_sym]
+        push!(current_sols, sol[mapped_name][1])
+    end
+
+    return current_sols
+end
+
+function replace_parameters(top_level_system, current_ps, initial_ps, selected_parameters)::Vector{Float64}
+    ps::Vector{Float64} = current_ps
+    for (index, value) in enumerate(current_ps)
+        if index in get_selected_parameter_indices(top_level_system, selected_parameters)
+            ps[index] = current_ps[index]
+        else
+            ps[index] = initial_ps[index]
+        end
+    end
+
+    return ps
+end
