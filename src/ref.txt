@@ -10,9 +10,22 @@ static_pipe_2.Q	11.470217164799628
 pressure source 1 = 501325
 pipe 1 and 2 in series
 pipe1 C = 60
-pie2 C = 80
+pipe2 C = 80
 static_pipe_1.Δp	252053.17869992816
 static_pipe_1.Q	8.664143180323185
 static_pipe_2.Δp	147946.82130007184
 static_pipe_2.Q	8.664143180323185
+
+pressure source 1 = 501325
+pipe 1 in series with source
+pipe 2 and 3 in parallel with pipe 1
+pipe1 C = 60
+pipe2 C = 70
+pipe3 C = 80
+static_pipe_1.Δp	338055.45681521215
+static_pipe_1.Q	10.152379186164602
+static_pipe_2.Q	4.737776953543464
+static_pipe_2.Δp	61944.54318478785
+static_pipe_3.Q	5.414602232621137
+static_pipe_3.Δp	61944.54318478785
 

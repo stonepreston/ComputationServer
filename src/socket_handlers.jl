@@ -115,12 +115,12 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
     println(initial_ps)
     lower_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     upper_bounds = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; cb = callback, f_abstol=1e-7, f_reltol=1e-7)
+    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; cb = callback, f_abstol=1e-6, f_reltol=1e-6)
     println("result ode.u: ")
     println(result_ode.u)
-        
-
+    p_dict = get_optimized_parameters(result_ode.u, top_level_system, data.selectedParameters)
     write(ws, "done")
+    write(ws, p_dict)
 end
 
 

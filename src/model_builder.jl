@@ -351,3 +351,16 @@ function replace_parameters(top_level_system, current_ps, initial_ps, selected_p
 
     return ps
 end
+
+function get_optimized_parameters(result_ode_u, top_level_system, selected_parameters)
+    p_dict = Dict()
+
+    top_level_ps = ModelingToolkit.parameters(top_level_system)
+    selected_indices = get_selected_parameter_indices(top_level_system, selected_parameters)
+    for (index, value) in enumerate(top_level_ps)
+        if index in selected_indices
+            p_dict[string(value)] = result_ode_u[index]
+        end
+    end
+    return p_dict
+end
