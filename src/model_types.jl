@@ -8,8 +8,15 @@ struct Parameter
 end
 StructTypes.StructType(::Type{Parameter}) = StructTypes.Struct()
 
+struct Argument
+    name::String
+    value::Float64
+end
+StructTypes.StructType(::Type{Argument}) = StructTypes.Struct()
+
 struct System 
     parameters::Vector{Parameter}
+    arguments::Vector{Argument}
     states::Vector{String}
     equations::Vector{String}
     connections::Vector{String}
@@ -50,6 +57,7 @@ StructTypes.lower(model::Model) = SerializedModel(
 
 StructTypes.lower(system::ModelingToolkit.AbstractSystem) = System(
     build_parameters(system),
+    build_arguments(system),
     string.(states(system)),
     string.(equations(system)),
     get_connections(system)

@@ -3,6 +3,7 @@ using Base: String, UInt32
 using HydraulicModels
 using ModelingToolkit
 using StructTypes
+using Match
 
 include("./model_types.jl")
 
@@ -49,4 +50,23 @@ function build_parameters(system::ModelingToolkit.AbstractSystem)::Vector{Parame
     end
     return parameterData
 end
+
+function build_arguments(system::ModelingToolkit.AbstractSystem)::Vector{Argument}
+    @match string(system.name) begin
+        "static_pipe" => return get_static_pipe_arguments()
+        "ideal_pressure_source" => return get_ideal_pressure_source_arguments()
+    end
+    return []
+end
+
+function get_static_pipe_arguments()
+    return [Argument("L", 2.0),
+            Argument("d", 0.4),
+            Argument("γ", 9810.0)]
+end
+
+function get_ideal_pressure_source_arguments()
+    return [Argument("p", 101325.0)]
+end
+
 

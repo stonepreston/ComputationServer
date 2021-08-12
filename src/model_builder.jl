@@ -17,6 +17,13 @@ function get_formatted_name(name)::String
     lowercase(replace(name, " " => "_"))
 end
 
+function build_kwargs_dict_from_arguments(arguments)
+    dict = Dict()
+    for argument in arguments
+        dict[Symbol(argument.name)] = argument.value
+    end
+    return dict
+end
 
 function get_systems_map(model_nodes)::Dict{String, ModelingToolkit.AbstractSystem}
 
@@ -24,10 +31,13 @@ function get_systems_map(model_nodes)::Dict{String, ModelingToolkit.AbstractSyst
     for model_node in model_nodes
         node_data = model_node.data
         model = node_data.model
-
-        model_prototype = get_model_by_id(model.id)
+        system = model.system
+        args = build_kwargs_dict_from_arguments(system.arguments)
         formatted_name = get_formatted_name(node_data.label)
-        systems_map[model_node.id] = model_prototype.constructor(t, name=Symbol(formatted_name))
+        args[:name] = Symbol(formatted_name)
+        model_prototype = get_model_by_id(model.id)
+        
+        systems_map[model_node.id] = model_prototype.constructor(t; args...)
     end
 
     return systems_map
@@ -214,7 +224,7 @@ end
 
 function build_top_level_system(iv::Num, connections::Vector{Equation}, systems_map::Dict{String, ModelingToolkit.AbstractSystem})::ODESystem
     systems = collect(values(systems_map))
-    @named top_level_system = compose(ODESystem(connections, iv), systems)
+    top_level_system = compose(ODESystem(connections, iv; name=:top_level_system), systems)
     return top_level_system
 end
 
@@ -268,29 +278,6 @@ function build_solutions_list(top_level_system, sol)
     return JSON3.write(solutions_list)
 end
 
-function format_selected_parameter_name(parameter_name)
-
-    split_name = split(parameter_name, ".")
-    no_spaces_lower_case_system_name = get_formatted_name(split_name[1])
-    formatted_parameter_name = string(no_spaces_lower_case_system_name, "₊", split_name[2])
-    return formatted_parameter_name
-end
-
-function get_selected_parameter_indices(top_level_system, selected_parameters)
-
-    top_level_ps = ModelingToolkit.parameters(top_level_system)
-    indices = []
-    for selected_parameter in selected_parameters
-        for (index, value) in enumerate(top_level_ps)
-            if string(value) == format_selected_parameter_name(selected_parameter)
-                push!(indices, index)
-            end
-        end
-    end
-   return indices
-    
-end
-
 function build_initial_parameter_list(top_level_system, pmap)::Vector{Float64}
     plist::Vector{Float64} = []
     top_level_ps = ModelingToolkit.parameters(top_level_system)
@@ -327,6 +314,7 @@ function format_selected_state_names(selected_states)
     return formatted_names
 
 end
+
 function build_current_sol_list(sol, simplified_system, states)
     current_sols = []
     formatted_state_names = format_selected_state_names(states)
@@ -340,28 +328,13 @@ function build_current_sol_list(sol, simplified_system, states)
     return current_sols
 end
 
-function replace_parameters(top_level_system, current_ps, initial_ps, selected_parameters)::Vector{Float64}
-    ps::Vector{Float64} = current_ps
-    for (index, value) in enumerate(current_ps)
-        if index in get_selected_parameter_indices(top_level_system, selected_parameters)
-            ps[index] = current_ps[index]
-        else
-            ps[index] = initial_ps[index]
-        end
-    end
-
-    return ps
-end
 
 function get_optimized_parameters(result_ode_u, top_level_system, selected_parameters)
     p_dict = Dict()
 
     top_level_ps = ModelingToolkit.parameters(top_level_system)
-    selected_indices = get_selected_parameter_indices(top_level_system, selected_parameters)
     for (index, value) in enumerate(top_level_ps)
-        if index in selected_indices
-            p_dict[string(value)] = result_ode_u[index]
-        end
+        p_dict[string(value)] = result_ode_u[index]
     end
     return p_dict
 end
@@ -370,18 +343,13 @@ function get_lower_bound(parameter::String)
     split_name = split(parameter, "₊")
     param_name = split_name[2]
     @match param_name begin
-        "L" => return .001
-        "d" => return .001
         "C" => return 40
-        "γ" => return .001
-        "p" => return .001
     end
-    return .001
+    return 40
 end
 
 function get_lower_bounds(top_level_system)
     lower_bounds = []
-
     top_level_ps = ModelingToolkit.parameters(top_level_system)
     for parameter in top_level_ps
         push!(lower_bounds, get_lower_bound(string(parameter)))
@@ -393,13 +361,9 @@ function get_upper_bound(parameter::String)
     split_name = split(parameter, "₊")
     param_name = split_name[2]
     @match param_name begin
-        "L" => return 5
-        "d" => return 5
         "C" => return 160
-        "γ" => return 9820
-        "p" => return 1001325
     end
-    return 1001325
+    return 160
 end
 
 function get_upper_bounds(top_level_system)
@@ -411,3 +375,4 @@ function get_upper_bounds(top_level_system)
     end
     return upper_bounds
 end
+

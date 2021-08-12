@@ -71,8 +71,6 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
     println("estimate_parameters event received from client $id")
     println("States: ")
     println(data.states)
-    println("Selected parameters: ")
-    println(data.selectedParameters)
 
     edge_modes = data.edgeNodes
     model_nodes = data.modelNodes
@@ -102,10 +100,7 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
     end
 
     lossfn = function (p)
-        println("Current ps")
-        println(p)
-        ps::Vector{Float64} = replace_parameters(top_level_system, p, initial_ps, data.selectedParameters)
-        sol = solve(prob, Rodas4(), p=ps)
+        sol = solve(prob, Rodas4(), p=p)
         current_sols = build_current_sol_list(sol, simplified_system, data.states)
         loss_value::Float64 = sum(abs2, current_sols .- true_sols)
         return loss_value, sol
@@ -117,7 +112,7 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
     ub = get_upper_bounds(top_level_system)
     println(lb)
     println(ub)
-    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; lower_bounds=lb, upper_bounds=ub, cb = callback, f_abstol=1e-7, f_reltol=1e-7)
+    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; cb = callback)
     println("result ode.u: ")
     println(result_ode.u)
     p_dict = get_optimized_parameters(result_ode.u, top_level_system, data.selectedParameters)
