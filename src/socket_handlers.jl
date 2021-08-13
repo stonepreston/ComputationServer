@@ -99,20 +99,21 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
         return false
     end
 
-    lossfn = function (p)
+    function loss(p)
         sol = solve(prob, Rodas4(), p=p)
         current_sols = build_current_sol_list(sol, simplified_system, data.states)
-        loss_value::Float64 = sum(abs2, current_sols .- true_sols)
+        loss_value = sum(abs2, current_sols .- true_sols)
         return loss_value, sol
     end
 
     println("initial_ps: ")
+    initial_ps = [50.0, 50.0]
     println(initial_ps)
-    lb = get_lower_bounds(top_level_system)
-    ub = get_upper_bounds(top_level_system)
-    println(lb)
-    println(ub)
-    result_ode = DiffEqFlux.sciml_train(lossfn, initial_ps; cb = callback)
+    println(typeof(initial_ps))
+    lower_bounds::Vector{Float64} = get_lower_bounds(top_level_system)
+    upper_bounds::Vector{Float64} = get_upper_bounds(top_level_system)
+    println(lower_bounds)
+    result_ode = DiffEqFlux.sciml_train(loss, [90.0, 80.0]; lower_bounds=lower_bounds, upper_bounds=upper_bounds, cb = callback)
     println("result ode.u: ")
     println(result_ode.u)
     p_dict = get_optimized_parameters(result_ode.u, top_level_system, data.selectedParameters)

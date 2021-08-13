@@ -60,7 +60,7 @@ function build_arguments(system::ModelingToolkit.AbstractSystem)::Vector{Argumen
 end
 
 function get_static_pipe_arguments()
-    return [Argument("L", 2.0),
+    return [Argument("L", 1.0),
             Argument("d", 0.4),
             Argument("γ", 9810.0)]
 end

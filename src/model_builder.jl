@@ -224,7 +224,7 @@ end
 
 function build_top_level_system(iv::Num, connections::Vector{Equation}, systems_map::Dict{String, ModelingToolkit.AbstractSystem})::ODESystem
     systems = collect(values(systems_map))
-    top_level_system = compose(ODESystem(connections, iv; name=:top_level_system), systems)
+    top_level_system = ODESystem(connections, iv; name=:top_level_system, systems=systems)
     return top_level_system
 end
 
@@ -343,12 +343,12 @@ function get_lower_bound(parameter::String)
     split_name = split(parameter, "₊")
     param_name = split_name[2]
     @match param_name begin
-        "C" => return 40
+        "C" => return 40.0
     end
-    return 40
+    return 40.0
 end
 
-function get_lower_bounds(top_level_system)
+function get_lower_bounds(top_level_system)::Vector{Float64}
     lower_bounds = []
     top_level_ps = ModelingToolkit.parameters(top_level_system)
     for parameter in top_level_ps
@@ -366,8 +366,8 @@ function get_upper_bound(parameter::String)
     return 160
 end
 
-function get_upper_bounds(top_level_system)
-    upper_bounds = []
+function get_upper_bounds(top_level_system)::Vector{Float64}
+    upper_bounds::Vector{Float64} = []
 
     top_level_ps = ModelingToolkit.parameters(top_level_system)
     for parameter in top_level_ps

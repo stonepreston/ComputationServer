@@ -1,11 +1,22 @@
 pressure source 1 = 501325
 pipe 1 and 2 in series
 pipe1 C = 90
-pie2 C = 90
+pipe2 C = 90
 static_pipe_1.Δp	200000.0000000001
 static_pipe_1.Q	11.470217164799628
 static_pipe_2.Δp	199999.99999999988
 static_pipe_2.Q	11.470217164799628
+
+pressure source 1 = 501325
+pipe 1 and 2 in series
+pipe1:
+L=100.0, C=50.0, d=.4
+pipe2:
+L=200.0, C=120.0, d=.4
+static_pipe_1.Δp	286685.68383494247
+static_pipe_1.Q	0.6439050322759688
+static_pipe_2.Δp	113314.31616505752
+static_pipe_2.Q	0.6439050322759688
 
 pressure source 1 = 501325
 pipe 1 and 2 in series
