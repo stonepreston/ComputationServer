@@ -329,14 +329,17 @@ function build_current_sol_list(sol, simplified_system, states)
 end
 
 
-function get_optimized_parameters(result_ode_u, top_level_system, selected_parameters)
-    p_dict = Dict()
+function get_optimized_parameters(result_ode_u, top_level_system)
+    p_list = []
 
     top_level_ps = ModelingToolkit.parameters(top_level_system)
     for (index, value) in enumerate(top_level_ps)
-        p_dict[string(value)] = result_ode_u[index]
+        p_dict = Dict()
+        p_dict["name"] = string(value)
+        p_dict["value"] = result_ode_u[index]
+        push!(p_list, p_dict)
     end
-    return p_dict
+    return p_list
 end
 
 function get_lower_bound(parameter::String)

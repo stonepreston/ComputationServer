@@ -85,8 +85,6 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
 
     prob = get_problem(simplified_system, pmap)
 
-    initial_ps::Vector{Float64} = build_initial_parameter_list(top_level_system, pmap)
-
     println("True sols: ")
     true_sols = build_true_sol_list(data.states)
     println(true_sols)
@@ -107,18 +105,15 @@ function on_estimate_parameters(ws::HTTP.WebSockets.WebSocket, id, data)
     end
 
     println("initial_ps: ")
-    initial_ps = [50.0, 50.0]
-    println(initial_ps)
-    println(typeof(initial_ps))
     lower_bounds::Vector{Float64} = get_lower_bounds(top_level_system)
     upper_bounds::Vector{Float64} = get_upper_bounds(top_level_system)
     println(lower_bounds)
-    result_ode = DiffEqFlux.sciml_train(loss, [90.0, 80.0]; lower_bounds=lower_bounds, upper_bounds=upper_bounds, cb = callback)
+    result_ode = DiffEqFlux.sciml_train(loss, lower_bounds; lower_bounds=lower_bounds, upper_bounds=upper_bounds, cb = callback)
     println("result ode.u: ")
     println(result_ode.u)
-    p_dict = get_optimized_parameters(result_ode.u, top_level_system, data.selectedParameters)
+    p_list = get_optimized_parameters(result_ode.u, top_level_system)
     write(ws, "done")
-    write(ws, JSON3.write(p_dict))
+    write(ws, JSON3.write(p_list))
 end
 
 

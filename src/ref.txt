@@ -33,10 +33,23 @@ pipe 2 and 3 in parallel with pipe 1
 pipe1 C = 60
 pipe2 C = 70
 pipe3 C = 80
-static_pipe_1.Δp	338055.45681521215
-static_pipe_1.Q	10.152379186164602
-static_pipe_2.Q	4.737776953543464
-static_pipe_2.Δp	61944.54318478785
-static_pipe_3.Q	5.414602232621137
-static_pipe_3.Δp	61944.54318478785
+static_pipe_1.Δp	338055.456815212
+static_pipe_1.Q	10.152379186164579
+static_pipe_2.Δp	61944.543184788025
+static_pipe_2.Q	4.73777695354347
+static_pipe_3.Δp	61944.543184788025
+static_pipe_3.Q	5.4146022326211085
+
+2 and 3 in parallel with 1
+2 and 3 both connect to 4
+all lengths are default
+60, 70, 80, 90
+static_pipe_1.Δp	241667.1156409023
+static_pipe_1.Q	8.469506686205202
+static_pipe_2.Δp	44282.554176736514
+static_pipe_2.Q	3.9524364535624277
+static_pipe_3.Δp	44282.55417673651
+static_pipe_3.Q	4.517070232642774
+static_pipe_4.Δp	114050.3301823612
+static_pipe_4.Q	8.469506686205202
 
