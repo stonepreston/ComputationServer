@@ -1,7 +1,13 @@
 pressure source 1 = 501325
+presssure sink = 101325
 pipe 1 and 2 in series
 pipe1 C = 90
 pipe2 C = 90
+default other params
+
+estimation
+pressure source 1.a₊p(t) 501325
+pressure source 2.a₊p(t) 101325
 static_pipe_1.Δp	200000.0000000001
 static_pipe_1.Q	11.470217164799628
 static_pipe_2.Δp	199999.99999999988
